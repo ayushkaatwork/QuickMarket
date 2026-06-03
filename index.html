@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickMarket — Premium Peer-to-Peer Marketplace</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="QuickMarket is a premium, lightning-fast peer-to-peer marketplace powered by Supabase. Discover, buy, and sell products with ease.">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background Blur Orbs -->
+  <div class="blur-orb orb-1"></div>
+  <div class="blur-orb orb-2"></div>
+  <div class="blur-orb orb-3"></div>
+
+  <!-- Header -->
+  <header class="main-header" id="mainHeader">
+    <div class="header-container">
+      <a href="#" class="logo">
+        <span class="logo-icon"><i class="fa-solid fa-bolt-lightning"></i></span>
+        <span class="logo-text">Quick<span>Market</span></span>
+      </a>
+
+      <div class="search-bar-container">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="searchInput" placeholder="Search premium items, tech, fashion..." autocomplete="off">
+        <button class="clear-search" id="clearSearch" style="display: none;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-secondary btn-icon" id="cartBtn" aria-label="Open Shopping Cart">
+          <i class="fa-solid fa-bag-shopping"></i>
+          <span class="cart-badge" id="cartBadge">0</span>
+        </button>
+        <button class="btn btn-primary" id="listProductBtn">
+          <i class="fa-solid fa-plus"></i>
+          <span>Sell Item</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Wrapper -->
+  <main class="main-content">
+    
+    <!-- Hero / Category Section -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <h1 class="hero-title">Find Extraordinary Items Near You</h1>
+        <p class="hero-subtitle">A premium, real-time peer-to-peer marketplace powered by Supabase.</p>
+      </div>
+      
+      <!-- Category Quick Filter -->
+      <div class="category-scroll">
+        <div class="category-filters" id="categoryFilters">
+          <button class="category-btn active" data-category="all">
+            <i class="fa-solid fa-grid-2"></i> All Items
+          </button>
+          <button class="category-btn" data-category="Electronics">
+            <i class="fa-solid fa-laptop"></i> Electronics
+          </button>
+          <button class="category-btn" data-category="Fashion">
+            <i class="fa-solid fa-shirt"></i> Fashion
+          </button>
+          <button class="category-btn" data-category="Home">
+            <i class="fa-solid fa-couch"></i> Home & Living
+          </button>
+          <button class="category-btn" data-category="Books">
+            <i class="fa-solid fa-book"></i> Books & Hobbies
+          </button>
+          <button class="category-btn" data-category="Other">
+            <i class="fa-solid fa-ellipsis"></i> Miscellaneous
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Grid / Status Area -->
+    <section class="products-section">
+      <div class="section-header">
+        <h2 class="section-title" id="listingTitle">Recent Listings</h2>
+        <div class="sorting-container">
+          <label for="sortBy">Sort by</label>
+          <select id="sortBy" class="sort-select">
+            <option value="newest">Newest First</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Database Setup Helper Alert (shows when supabase fetch fails due to missing table) -->
+      <div class="setup-helper-card" id="setupHelper" style="display: none;">
+        <div class="helper-icon"><i class="fa-solid fa-database"></i></div>
+        <div class="helper-content">
+          <h3>Database Schema Required</h3>
+          <p>We connected successfully to Supabase, but the <code>products</code> table doesn't exist yet, or Row-Level Security (RLS) is blocking access. Click the button below to initialize a schema and inject sample listings directly!</p>
+          <button class="btn btn-primary btn-sm" id="initializeDbBtn">
+            <i class="fa-solid fa-circle-play"></i> Initialize Database Schema
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-state" id="loadingState">
+        <div class="spinner"></div>
+        <p>Fetching premium listings...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+        <h3>No items found</h3>
+        <p>Try adjusting your search query, selecting another category, or list a new item to get started.</p>
+        <button class="btn btn-secondary" id="resetFiltersBtn">Reset Filters</button>
+      </div>
+
+      <!-- Product Cards Grid -->
+      <div class="product-grid" id="productGrid">
+        <!-- Injected dynamically via JS -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Sidebar: Shopping Cart -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3>Your Bag</h3>
+      <button class="close-sidebar-btn" id="closeCartBtn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div class="cart-items" id="cartItemsContainer">
+      <!-- Injected dynamically via JS -->
+    </div>
+
+    <div class="cart-footer">
+      <div class="cart-totals">
+        <div class="total-row">
+          <span>Subtotal</span>
+          <span id="cartSubtotal">$0.00</span>
+        </div>
+        <div class="total-row tax-row">
+          <span>Platform Fee (Free)</span>
+          <span>$0.00</span>
+        </div>
+        <div class="total-row final-total">
+          <span>Total</span>
+          <span id="cartTotal">$0.00</span>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" id="checkoutBtn">
+        <i class="fa-solid fa-credit-card"></i> Checkout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Modal: Sell Product -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>List an Item for Sale</h3>
+        <button class="close-modal-btn" id="closeModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="sellItemForm" class="modal-form">
+        <div class="form-group">
+          <label for="prodTitle">Product Title *</label>
+          <input type="text" id="prodTitle" placeholder="e.g. iPhone 15 Pro Max - 256GB" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="prodPrice">Price (USD) *</label>
+            <div class="price-input-wrapper">
+              <span class="currency-symbol">$</span>
+              <input type="number" id="prodPrice" min="0" step="0.01" placeholder="0.00" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="prodCategory">Category *</label>
+            <select id="prodCategory" required>
+              <option value="" disabled selected>Select category</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Fashion">Fashion</option>
+              <option value="Home">Home & Living</option>
+              <option value="Books">Books & Hobbies</option>
+              <option value="Other">Miscellaneous</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="prodImage">Image URL (Optional)</label>
+          <input type="url" id="prodImage" placeholder="https://images.unsplash.com/photo-...">
+          <small class="form-tip">Leave blank for a matching placeholder image based on category.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="prodDesc">Description *</label>
+          <textarea id="prodDesc" rows="4" placeholder="Describe the item's condition, features, shipping/pickup details..." required></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancelFormBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submitFormBtn">
+            <i class="fa-solid fa-paper-plane"></i> Publish Listing
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
