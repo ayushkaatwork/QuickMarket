@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Market — Customer Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body class="auth-wrapper">
+
+  <!-- Background Blur Orbs -->
+  <div class="blur-orb orb-1"></div>
+  <div class="blur-orb orb-2"></div>
+
+  <div class="auth-card">
+    <div class="auth-header">
+      <a href="../index.html" class="auth-logo">
+        <span class="logo-icon"><i class="fa-solid fa-leaf"></i></span>
+        <span>Quick<span>Market</span></span>
+      </a>
+      <p class="auth-subtitle" id="authSubtitle">Log in to shop fresh organic groceries</p>
+    </div>
+
+    <!-- Mode Selector: Sign In vs Sign Up -->
+    <div class="auth-tabs" id="modeTabs">
+      <div class="auth-tab active" id="tabSignIn">Sign In</div>
+      <div class="auth-tab" id="tabSignUp">Sign Up</div>
+    </div>
+
+    <!-- Login Methods (Password vs OTP) -->
+    <div class="auth-tabs" id="loginMethodTabs" style="margin-bottom: 20px;">
+      <div class="auth-tab active" id="tabPassword">Password</div>
+      <div class="auth-tab" id="tabOtp">OTP Login</div>
+    </div>
+
+    <!-- SIGN IN FORM (PASSWORD METHOD) -->
+    <form id="signInForm" style="display: block;">
+      <div class="form-group">
+        <label class="form-label" for="loginEmail">Email Address</label>
+        <div class="form-control-wrapper">
+          <i class="form-control-icon fa-solid fa-envelope"></i>
+          <input type="email" id="loginEmail" class="form-control" placeholder="name@domain.com" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="loginPassword">Password</label>
+        <div class="form-control-wrapper">
+          <i class="form-control-icon fa-solid fa-lock"></i>
+          <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top: 10px;">
+        Sign In <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </form>
+
+    <!-- SIGN IN FORM (OTP METHOD) -->
+    <form id="otpLoginForm" style="display: none;">
+      <div class="form-group">
+        <label class="form-label" for="otpContact">Mobile Number</label>
+        <div class="otp-btn-container">
+          <div class="form-control-wrapper" style="flex: 1; display: flex; align-items: center;">
+            <i class="form-control-icon fa-solid fa-phone" style="position: absolute; left: 14px; color: var(--text-muted);"></i>
+            <span style="position: absolute; left: 38px; color: var(--text-primary); font-weight: 600; font-size: 0.95rem;">+91</span>
+            <input type="tel" id="otpContact" class="form-control" placeholder="98765 43210" maxlength="10" pattern="[6-9][0-9]{9}" style="padding-left: 74px;" required>
+          </div>
+          <button type="button" class="btn btn-secondary" id="sendOtpBtn">Send</button>
+        </div>
+        <small style="color: var(--text-muted); display: block; margin-top: 4px;">We'll send a 6-digit code via SMS</small>
+      </div>
+      <div class="form-group" id="otpTokenGroup" style="display: none;">
+        <label class="form-label" for="otpToken">Enter 6-Digit Code</label>
+        <div class="form-control-wrapper">
+          <i class="form-control-icon fa-solid fa-shield-halved"></i>
+          <input type="text" id="otpToken" class="form-control" placeholder="123456" maxlength="6" pattern="[0-9]{6}">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="verifyOtpSubmitBtn" style="margin-top: 10px;" disabled>
+        Verify & Sign In <i class="fa-solid fa-circle-check"></i>
+      </button>
+    </form>
+
+    <!-- SIGN UP FORM -->
+    <form id="signUpForm" style="display: none;">
+      <div class="form-group">
+        <label class="form-label" for="regFullName">Full Name</label>
+        <div class="form-control-wrapper">
+          <i class="form-control-icon fa-solid fa-user"></i>
+          <input type="text" id="regFullName" class="form-control" placeholder="John Doe" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="regUsername">Username</label>
+        <div class="form-control-wrapper">
+          <i class="form-control-icon fa-solid fa-at"></i>
+          <input type="text" id="regUsername" class="form-control" placeholder="johndoe" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="regMobile">Mobile Number</label>
+        <div class="form-control-wrapper" style="display: flex; align-items: center; position: relative;">
+          <i class="form-control-icon fa-solid fa-phone" style="position: absolute; left: 14px; color: var(--text-muted);"></i>
+          <span style="position: absolute; left: 38px; color: var(--text-primary); font-weight: 600; font-size: 0.95rem;">+91</span>
+          <input type="tel" id="regMobile" class="form-control" placeholder="98765 43210" maxlength="10" pattern="[6-9][0-9]{9}" style="padding-left: 74px;" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="regEmail">Email Address</label>
+        <div class="form-control-wrapper">
+          <i class="form-control-icon fa-solid fa-envelope"></i>
+          <input type="email" id="regEmail" class="form-control" placeholder="john@example.com" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="regPassword">Password</label>
+        <div class="form-control-wrapper">
+          <i class="form-control-icon fa-solid fa-lock"></i>
+          <input type="password" id="regPassword" class="form-control" placeholder="Min. 6 characters" required minlength="6">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="regConfirmPassword">Confirm Password</label>
+        <div class="form-control-wrapper">
+          <i class="form-control-icon fa-solid fa-shield-heart"></i>
+          <input type="password" id="regConfirmPassword" class="form-control" placeholder="Confirm your password" required minlength="6">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top: 10px;">
+        Register Profile <i class="fa-solid fa-user-plus"></i>
+      </button>
+    </form>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Authentication logic module -->
+  <script type="module">
+    import { signUpCustomer, loginCustomer, sendOtp, verifyOtp, showToast } from '../js/auth.js'
+    import { supabase } from '../js/supabase.js'
+
+    const tabSignIn = document.getElementById('tabSignIn')
+    const tabSignUp = document.getElementById('tabSignUp')
+    const tabPassword = document.getElementById('tabPassword')
+    const tabOtp = document.getElementById('tabOtp')
+
+    const signInForm = document.getElementById('signInForm')
+    const otpLoginForm = document.getElementById('otpLoginForm')
+    const signUpForm = document.getElementById('signUpForm')
+    
+    const loginMethodTabs = document.getElementById('loginMethodTabs')
+    const authSubtitle = document.getElementById('authSubtitle')
+
+    // Switch between Sign In / Sign Up modes
+    tabSignIn.addEventListener('click', () => {
+      tabSignIn.classList.add('active')
+      tabSignUp.classList.remove('active')
+      signUpForm.style.display = 'none'
+      loginMethodTabs.style.display = 'flex'
+      authSubtitle.textContent = 'Log in to shop fresh organic groceries'
+      
+      if (tabPassword.classList.contains('active')) {
+        signInForm.style.display = 'block'
+        otpLoginForm.style.display = 'none'
+      } else {
+        signInForm.style.display = 'none'
+        otpLoginForm.style.display = 'block'
+      }
+    })
+
+    tabSignUp.addEventListener('click', () => {
+      tabSignUp.classList.add('active')
+      tabSignIn.classList.remove('active')
+      loginMethodTabs.style.display = 'none'
+      signInForm.style.display = 'none'
+      otpLoginForm.style.display = 'none'
+      signUpForm.style.display = 'block'
+      authSubtitle.textContent = 'Create your Quick Market customer account'
+    })
+
+    // Switch between Password / OTP methods
+    tabPassword.addEventListener('click', () => {
+      tabPassword.classList.add('active')
+      tabOtp.classList.remove('active')
+      signInForm.style.display = 'block'
+      otpLoginForm.style.display = 'none'
+    })
+
+    tabOtp.addEventListener('click', () => {
+      tabOtp.classList.add('active')
+      tabPassword.classList.remove('active')
+      signInForm.style.display = 'none'
+      otpLoginForm.style.display = 'block'
+    })
+
+    // Handle Password Login Submit
+    signInForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const email = document.getElementById('loginEmail').value
+      const pass = document.getElementById('loginPassword').value
+
+      const res = await loginCustomer(email, pass)
+      if (res.success) {
+        setTimeout(() => {
+          window.location.href = './dashboard.html'
+        }, 1000)
+      }
+    })
+
+    // Handle OTP Flow
+    const sendOtpBtn = document.getElementById('sendOtpBtn')
+    const otpContact = document.getElementById('otpContact')
+    const otpTokenGroup = document.getElementById('otpTokenGroup')
+    const verifyOtpSubmitBtn = document.getElementById('verifyOtpSubmitBtn')
+
+    sendOtpBtn.addEventListener('click', async () => {
+      const contactVal = otpContact.value.trim()
+      if (!/^[6-9]\d{9}$/.test(contactVal)) {
+        showToast('Please enter a valid 10-digit mobile number.', 'warning')
+        return
+      }
+
+      const fullPhoneNumber = `+91${contactVal}`
+
+      sendOtpBtn.disabled = true
+      sendOtpBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'
+
+      const res = await sendOtp(fullPhoneNumber)
+      if (res.success) {
+        otpTokenGroup.style.display = 'block'
+        verifyOtpSubmitBtn.disabled = false
+        otpContact.disabled = true
+      }
+      sendOtpBtn.disabled = false
+      sendOtpBtn.textContent = 'Resend'
+    })
+
+    otpLoginForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const contactVal = otpContact.value.trim()
+      const token = document.getElementById('otpToken').value.trim()
+
+      if (!token) {
+        showToast('Please type the OTP token.', 'warning')
+        return
+      }
+
+      const fullPhoneNumber = `+91${contactVal}`
+      const redirectTo = window.location.origin + '/pages/dashboard.html'
+
+      const res = await verifyOtp(fullPhoneNumber, token, redirectTo)
+      if (res.success) {
+        setTimeout(() => {
+          if (res.action_link) {
+            window.location.href = res.action_link
+          } else {
+            window.location.href = './dashboard.html'
+          }
+        }, 1000)
+      }
+    })
+
+    // Handle Signup Submit
+    signUpForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const fullName = document.getElementById('regFullName').value.trim()
+      const username = document.getElementById('regUsername').value.trim()
+      const mobileNumber = document.getElementById('regMobile').value.trim()
+      const email = document.getElementById('regEmail').value.trim()
+      const pass = document.getElementById('regPassword').value
+      const confirmPass = document.getElementById('regConfirmPassword').value
+
+      if (!/^[6-9]\d{9}$/.test(mobileNumber)) {
+        showToast('Please enter a valid 10-digit mobile number.', 'warning')
+        return
+      }
+
+      if (pass !== confirmPass) {
+        showToast('Passwords do not match.', 'warning')
+        return
+      }
+
+      const fullMobileNumber = `+91${mobileNumber}`
+
+      const res = await signUpCustomer(email, pass, fullName, fullMobileNumber, username)
+      if (res.success) {
+        signUpForm.reset()
+        // Switch to login tab
+        tabSignIn.click()
+        tabPassword.click()
+      }
+    })
+  </script>
+</body>
+</html>

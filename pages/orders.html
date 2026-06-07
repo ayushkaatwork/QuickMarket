@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Market — Track Orders</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+  <!-- Background Blur Orbs -->
+  <div class="blur-orb orb-1"></div>
+  <div class="blur-orb orb-2"></div>
+
+  <!-- Header -->
+  <header class="main-header">
+    <div class="header-container" style="justify-content: flex-start; gap: 14px;">
+      <a href="dashboard.html" style="color: var(--text-secondary); font-size: 1.15rem;"><i class="fa-solid fa-chevron-left"></i></a>
+      <h2 style="font-size: 1.2rem;">Track Your Orders</h2>
+    </div>
+  </header>
+
+  <!-- Content Container -->
+  <main class="app-container" style="padding-bottom: 90px;">
+    
+    <!-- Empty State -->
+    <div class="empty-state" id="ordersEmptyState" style="display: none; padding: 60px 16px;">
+      <div class="empty-state-illustration"><i class="fa-solid fa-clock-rotate-left"></i></div>
+      <h3>No orders placed yet</h3>
+      <p>Your history will show up here after you complete checkout.</p>
+      <button class="btn btn-primary btn-sm" onclick="location.href='dashboard.html'">Browse Grocery</button>
+    </div>
+
+    <!-- Active Orders Container -->
+    <div id="ordersList" style="display: flex; flex-direction: column; gap: 16px;">
+      <!-- Loading placeholders -->
+      <div class="skeleton-card" style="padding: 20px;">
+        <div class="skeleton skeleton-text" style="width: 50%;"></div>
+        <div class="skeleton skeleton-text" style="width: 80%; margin-top: 10px;"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Mobile Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <div class="nav-item" onclick="location.href='dashboard.html'">
+      <i class="fa-solid fa-shop"></i>
+      <span>Store</span>
+    </div>
+    <div class="nav-item" onclick="location.href='cart.html'">
+      <i class="fa-solid fa-basket-shopping"></i>
+      <span class="nav-badge" id="navCartBadge" style="display: none;">0</span>
+      <span>Cart</span>
+    </div>
+    <div class="nav-item active" onclick="location.href='orders.html'">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      <span>Orders</span>
+    </div>
+    <div class="nav-item" id="logoutNavItem">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      <span>Logout</span>
+    </div>
+  </nav>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Script Modules -->
+  <script type="module">
+    import { fetchCustomerOrders, fetchOrderItems, subscribeToOrderStatus } from '../js/orders.js'
+    import { getCustomerProfile, logoutAll, showToast } from '../js/auth.js'
+    import { getCartItems } from '../js/cart.js'
+    import { supabase } from '../js/supabase.js'
+
+    const ordersList = document.getElementById('ordersList')
+    const ordersEmptyState = document.getElementById('ordersEmptyState')
+    const navCartBadge = document.getElementById('navCartBadge')
+
+    const statusSteps = ['Pending', 'Accepted', 'Packed', 'Out for Delivery', 'Delivered']
+
+    // --- PROTECT ROUTE: REQUIRE LOGIN ---
+    async function checkAuth() {
+      const profile = await getCustomerProfile()
+      const logoutNavItem = document.getElementById('logoutNavItem')
+
+      if (!profile) {
+        showToast('Please login to track your orders.', 'warning')
+        setTimeout(() => {
+          window.location.href = 'customer-login.html'
+        }, 1500)
+        return null
+      }
+
+      logoutNavItem.style.display = 'flex'
+      logoutNavItem.addEventListener('click', async () => {
+        await logoutAll()
+        setTimeout(() => {
+          window.location.href = 'dashboard.html'
+        }, 800)
+      })
+
+      return profile
+    }
+
+    // --- RENDER CART BADGE ---
+    async function updateCartBadge() {
+      const items = await getCartItems()
+      const totalQty = items.reduce((sum, i) => sum + i.quantity, 0)
+      if (totalQty > 0) {
+        navCartBadge.style.display = 'flex'
+        navCartBadge.textContent = totalQty
+      } else {
+        navCartBadge.style.display = 'none'
+      }
+    }
+
+    // --- RENDER TIMELINE WIDTH ---
+    function getTimelineWidth(status) {
+      const idx = statusSteps.indexOf(status)
+      if (idx === -1) return '0%'
+      return `${(idx / (statusSteps.length - 1)) * 100}%`
+    }
+
+    // --- LOAD & DRAW CUSTOMER ORDERS ---
+    async function loadOrders() {
+      ordersList.innerHTML = ''
+      const orders = await fetchCustomerOrders()
+
+      if (orders.length === 0) {
+        ordersEmptyState.style.display = 'block'
+        ordersList.style.display = 'none'
+        return
+      }
+
+      ordersEmptyState.style.display = 'none'
+      ordersList.style.display = 'flex'
+
+      for (const order of orders) {
+        const card = document.createElement('div')
+        card.className = 'order-card'
+        card.id = `order-${order.id}`
+
+        const inrFormatter = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' })
+        const dateStr = new Date(order.created_at).toLocaleDateString('en-IN', {
+          day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+        })
+
+        // Initial template setup
+        card.innerHTML = `
+          <div class="order-card-header">
+            <div>
+              <span class="order-id">ID: #${order.id.slice(0, 8).toUpperCase()}</span>
+              <div class="order-date">${dateStr}</div>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-weight: 700; color: var(--accent);">${inrFormatter.format(order.total_price)}</span>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">${order.payment_method}</div>
+            </div>
+          </div>
+          
+          <div class="order-timeline">
+            <div class="timeline-progress-line" id="progress-${order.id}" style="width: ${getTimelineWidth(order.order_status)};"></div>
+            ${statusSteps.map((step, idx) => {
+              const currentStatusIdx = statusSteps.indexOf(order.order_status)
+              let statusClass = ''
+              if (idx === currentStatusIdx) statusClass = 'active'
+              else if (idx < currentStatusIdx) statusClass = 'completed'
+              
+              let icon = 'fa-clock'
+              if (step === 'Accepted') icon = 'fa-circle-check'
+              if (step === 'Packed') icon = 'fa-box-open'
+              if (step === 'Out for Delivery') icon = 'fa-motorcycle'
+              if (step === 'Delivered') icon = 'fa-house-circle-check'
+
+              return `
+                <div class="timeline-step ${statusClass}" data-step="${step}">
+                  <div class="step-node"><i class="fa-solid ${icon}"></i></div>
+                  <div class="step-label">${step}</div>
+                </div>
+              `
+            }).join('')}
+          </div>
+
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 16px; border-top: 1px solid var(--border-color); padding-top: 8px;">
+            <i class="fa-solid fa-location-dot" style="margin-right: 4px; color: var(--primary);"></i> Address: ${order.delivery_address}
+          </div>
+          <div id="items-${order.id}" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;">
+            Loading items...
+          </div>
+        `
+        ordersList.appendChild(card)
+
+        // Load items details asynchronously
+        loadItemsDetails(order.id)
+
+        // Subscribe to real-time status updates for this specific order
+        subscribeToOrderStatus(order.id, (updatedOrder) => {
+          updateTimelineUI(updatedOrder.id, updatedOrder.order_status)
+        })
+      }
+    }
+
+    // Load order item descriptions
+    async function loadItemsDetails(orderId) {
+      const itemNode = document.getElementById(`items-${orderId}`)
+      if (!itemNode) return
+
+      const items = await fetchOrderItems(orderId)
+      if (items.length === 0) {
+        itemNode.textContent = 'No item details.'
+        return
+      }
+
+      const itemStrings = items.map(i => `${i.products ? i.products.name : 'Product'} (x${i.quantity})`)
+      itemNode.innerHTML = `<strong>Items:</strong> ${itemStrings.join(', ')}`
+    }
+
+    // --- LIVE UPDATE TIMELINE VISUAL STATE ---
+    function updateTimelineUI(orderId, newStatus) {
+      const progressLine = document.getElementById(`progress-${orderId}`)
+      const card = document.getElementById(`order-${orderId}`)
+      if (!progressLine || !card) return
+
+      // Animate line width
+      progressLine.style.width = getTimelineWidth(newStatus)
+
+      // Update node active states
+      const steps = card.querySelectorAll('.timeline-step')
+      const targetIdx = statusSteps.indexOf(newStatus)
+
+      steps.forEach((stepNode, idx) => {
+        stepNode.classList.remove('active', 'completed')
+        if (idx === targetIdx) {
+          stepNode.classList.add('active')
+        } else if (idx < targetIdx) {
+          stepNode.classList.add('completed')
+        }
+      })
+
+      showToast(`Order status updated to "${newStatus}"!`, 'info')
+    }
+
+    // Initialization
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth()
+      if (user) {
+        loadOrders()
+        updateCartBadge()
+      }
+    })
+  </script>
+</body>
+</html>

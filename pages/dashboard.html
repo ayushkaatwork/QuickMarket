@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Market — Storefront</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+  <!-- Background Blur Orbs -->
+  <div class="blur-orb orb-1"></div>
+  <div class="blur-orb orb-2"></div>
+
+  <!-- Store Header -->
+  <header class="main-header">
+    <div class="header-container">
+      <a href="../index.html" class="logo">
+        <span class="logo-icon"><i class="fa-solid fa-leaf"></i></span>
+        <span class="logo-text">Quick<span>Market</span></span>
+      </a>
+      
+      <div class="search-bar-container">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="searchInput" placeholder="Search fresh veggies..." autocomplete="off">
+        <button class="clear-search" id="clearSearch" style="display: none;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content Container -->
+  <main class="app-container">
+    
+    <!-- User Welcome Greeting -->
+    <div class="hero-card" id="userGreetingCard" style="padding: 16px; margin-bottom: 16px; text-align: left; display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <h2 style="font-size: 1.15rem; color: var(--text-primary);" id="welcomeUserText">Welcome to Quick Market!</h2>
+        <p style="font-size: 0.8rem; color: var(--text-secondary);">Browse our fresh collections below</p>
+      </div>
+      <button class="btn btn-secondary btn-sm" id="authBtn">Login</button>
+    </div>
+
+    <!-- Category Chips Scrollbar -->
+    <div class="category-container">
+      <div class="category-scroll" id="categoryScrollContainer">
+        <div class="category-chip active" data-category="all">
+          <i class="fa-solid fa-border-all"></i> All Items
+        </div>
+        <div class="category-chip" data-category="Vegetables">
+          <i class="fa-solid fa-carrot"></i> Vegetables
+        </div>
+        <div class="category-chip" data-category="Fruits">
+          <i class="fa-solid fa-apple-whole"></i> Fruits
+        </div>
+        <div class="category-chip" data-category="Grocery">
+          <i class="fa-solid fa-wheat-awn"></i> Grocery
+        </div>
+      </div>
+    </div>
+
+    <!-- Products Catalogue Section -->
+    <section>
+      <!-- Loading skeletons (shows on load) -->
+      <div id="productGridSkeletons" style="display: none;">
+        <div class="product-grid" id="skeletonsContainer">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-state-illustration"><i class="fa-solid fa-basket-shopping"></i></div>
+        <h3>No items matching your request</h3>
+        <p>Try clearing your search query or switching categories.</p>
+        <button class="btn btn-secondary btn-sm" id="clearFiltersBtn">Reset Catalog</button>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="product-grid" id="productsCatalogueGrid">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Mobile Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="location.href='dashboard.html'">
+      <i class="fa-solid fa-shop"></i>
+      <span>Store</span>
+    </div>
+    <div class="nav-item" onclick="location.href='cart.html'">
+      <i class="fa-solid fa-basket-shopping"></i>
+      <span class="nav-badge" id="navCartBadge" style="display: none;">0</span>
+      <span>Cart</span>
+    </div>
+    <div class="nav-item" onclick="location.href='orders.html'">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      <span>Orders</span>
+    </div>
+    <div class="nav-item" id="logoutNavItem">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      <span>Logout</span>
+    </div>
+  </nav>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Script Modules -->
+  <script type="module">
+    import { fetchProducts, renderProductGrid, renderSkeletons } from '../js/products.js'
+    import { getCustomerProfile, logoutAll } from '../js/auth.js'
+    import { addToCart, getCartItems } from '../js/cart.js'
+    import { supabase } from '../js/supabase.js'
+
+    const productsGrid = document.getElementById('productsCatalogueGrid')
+    const skeletonsContainer = document.getElementById('skeletonsContainer')
+    const skeletonsWrapper = document.getElementById('productGridSkeletons')
+    const searchInput = document.getElementById('searchInput')
+    const clearSearch = document.getElementById('clearSearch')
+    const categoryScroll = document.getElementById('categoryScrollContainer')
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn')
+    const navCartBadge = document.getElementById('navCartBadge')
+
+    let activeCategory = 'all'
+    let searchQuery = ''
+
+    // --- RENDER CART BADGE ---
+    async function updateCartBadge() {
+      const items = await getCartItems()
+      const totalQty = items.reduce((sum, i) => sum + i.quantity, 0)
+      if (totalQty > 0) {
+        navCartBadge.style.display = 'flex'
+        navCartBadge.textContent = totalQty
+      } else {
+        navCartBadge.style.display = 'none'
+      }
+    }
+
+    // --- RE-FETCH & RENDER PRODUCTS CATALOG ---
+    async function loadCatalog() {
+      productsGrid.style.display = 'none'
+      skeletonsWrapper.style.display = 'block'
+      renderSkeletons('skeletonsContainer', 4)
+
+      const products = await fetchProducts(activeCategory, searchQuery)
+      
+      skeletonsWrapper.style.display = 'none'
+      
+      renderProductGrid(products, 'productsCatalogueGrid', async (productId) => {
+        const added = await addToCart(productId)
+        if (added) {
+          updateCartBadge()
+        }
+      })
+    }
+
+    // --- USER GREETING BANNER & AUTH INITIALIZATION ---
+    async function initUserSession() {
+      const profile = await getCustomerProfile()
+      const welcomeText = document.getElementById('welcomeUserText')
+      const authBtn = document.getElementById('authBtn')
+      const logoutNavItem = document.getElementById('logoutNavItem')
+
+      if (profile) {
+        welcomeText.textContent = `Hey, ${profile.full_name || profile.username || 'Customer'}! 👋`
+        authBtn.style.display = 'none'
+        logoutNavItem.style.display = 'flex'
+      } else {
+        welcomeText.textContent = `Welcome to Quick Market! 🥦`
+        authBtn.style.display = 'block'
+        logoutNavItem.style.display = 'none'
+      }
+      
+      authBtn.addEventListener('click', () => {
+        window.location.href = 'customer-login.html'
+      })
+
+      logoutNavItem.addEventListener('click', async () => {
+        await logoutAll()
+        setTimeout(() => location.reload(), 800)
+      })
+    }
+
+    // --- EVENT BINDINGS ---
+
+    // Search bar typing
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim()
+      clearSearch.style.display = searchQuery.length > 0 ? 'block' : 'none'
+      loadCatalog()
+    })
+
+    // Search bar clear
+    clearSearch.addEventListener('click', () => {
+      searchInput.value = ''
+      searchQuery = ''
+      clearSearch.style.display = 'none'
+      loadCatalog()
+    })
+
+    // Category Tabs click
+    categoryScroll.addEventListener('click', (e) => {
+      const chip = e.target.closest('.category-chip')
+      if (!chip) return
+      
+      categoryScroll.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'))
+      chip.classList.add('active')
+      
+      activeCategory = chip.getAttribute('data-category')
+      loadCatalog()
+    })
+
+    // Reset Catalog empty state CTA
+    clearFiltersBtn.addEventListener('click', () => {
+      searchInput.value = ''
+      searchQuery = ''
+      clearSearch.style.display = 'none'
+      activeCategory = 'all'
+      categoryScroll.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'))
+      categoryScroll.querySelector('[data-category="all"]').classList.add('active')
+      loadCatalog()
+    })
+
+    // Initializer
+    document.addEventListener('DOMContentLoaded', () => {
+      // Parse category query parameter from URL if present
+      const urlParams = new URLSearchParams(window.location.search)
+      const catParam = urlParams.get('category')
+      if (catParam) {
+        activeCategory = catParam
+        const chips = categoryScroll.querySelectorAll('.category-chip')
+        chips.forEach(c => {
+          c.classList.remove('active')
+          if (c.getAttribute('data-category') === catParam) {
+            c.classList.add('active')
+          }
+        })
+      }
+
+      initUserSession()
+      loadCatalog()
+      updateCartBadge()
+    })
+  </script>
+</body>
+</html>

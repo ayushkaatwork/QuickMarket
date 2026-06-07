@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Market — Checkout Bag</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    /* Fullscreen Success Overlay styling */
+    .success-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.98);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+    .success-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .success-checkmark {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #ffffff; /* White checkmark text on green */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      transform: scale(0.5);
+      transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .success-overlay.active .success-checkmark {
+      transform: scale(1);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Blur Orbs -->
+  <div class="blur-orb orb-1"></div>
+  <div class="blur-orb orb-2"></div>
+
+  <!-- Header -->
+  <header class="main-header">
+    <div class="header-container" style="justify-content: flex-start; gap: 14px;">
+      <a href="dashboard.html" style="color: var(--text-secondary); font-size: 1.15rem;"><i class="fa-solid fa-chevron-left"></i></a>
+      <h2 style="font-size: 1.2rem;">Your Shopping Bag</h2>
+    </div>
+  </header>
+
+  <!-- Content Container -->
+  <main class="app-container" style="padding-bottom: 90px;">
+    
+    <!-- Empty State -->
+    <div class="empty-state" id="cartEmptyState" style="display: none; padding: 60px 16px;">
+      <div class="empty-state-illustration"><i class="fa-solid fa-basket-shopping"></i></div>
+      <h3>Your bag is empty</h3>
+      <p>Fill it with organic vegetables and groceries from our catalogue.</p>
+      <button class="btn btn-primary btn-sm" onclick="location.href='dashboard.html'">Go to Store</button>
+    </div>
+
+    <!-- Active Cart Content -->
+    <div id="cartContentWrapper" style="display: none;">
+      <!-- Cart Items List -->
+      <div class="cart-items-container" id="cartRows">
+        <!-- Injected dynamically via JS -->
+      </div>
+
+      <!-- Bill Details -->
+      <div class="cart-bill-details">
+        <h3 class="bill-title">Bill Summary</h3>
+        <div class="bill-row">
+          <span>Subtotal</span>
+          <span id="billSubtotal">₹0.00</span>
+        </div>
+        <div class="bill-row">
+          <span>Delivery Charge</span>
+          <span id="billDelivery">₹0.00</span>
+        </div>
+        <div class="bill-row total">
+          <span>Grand Total</span>
+          <span id="billTotal">₹0.00</span>
+        </div>
+      </div>
+
+      <!-- Checkout Delivery Address Form -->
+      <div class="cart-bill-details" style="margin-top: 20px;">
+        <h3 class="bill-title">Delivery Information</h3>
+        <form id="checkoutForm">
+          <div class="form-group">
+            <label class="form-label" for="shipName">Recipient Name</label>
+            <div class="form-control-wrapper">
+              <i class="form-control-icon fa-solid fa-user"></i>
+              <input type="text" id="shipName" class="form-control" placeholder="John Doe" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="shipPhone">Delivery Phone Number</label>
+            <div class="form-control-wrapper">
+              <i class="form-control-icon fa-solid fa-phone"></i>
+              <input type="tel" id="shipPhone" class="form-control" placeholder="+919876543210" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="shipAddress">Delivery Address</label>
+            <div class="form-control-wrapper">
+              <i class="form-control-icon fa-solid fa-map-location-dot"></i>
+              <input type="text" id="shipAddress" class="form-control" placeholder="Flat No, Street, Landmark, City" required>
+            </div>
+          </div>
+
+          <!-- Payment Options -->
+          <h3 class="bill-title" style="margin-top: 20px; font-size: 0.95rem;">Select Payment Method</h3>
+          <div class="payment-selector">
+            <div class="payment-option active" data-method="COD">
+              <i class="fa-solid fa-hand-holding-dollar"></i>
+              <span>Cash on Delivery</span>
+            </div>
+            <div class="payment-option" data-method="UPI">
+              <i class="fa-solid fa-mobile-screen-button"></i>
+              <span>UPI / QR Pay</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" style="margin-top: 10px;" id="placeOrderBtn">
+            Confirm and Order <i class="fa-solid fa-truck-fast"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Mobile Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <div class="nav-item" onclick="location.href='dashboard.html'">
+      <i class="fa-solid fa-shop"></i>
+      <span>Store</span>
+    </div>
+    <div class="nav-item active" onclick="location.href='cart.html'">
+      <i class="fa-solid fa-basket-shopping"></i>
+      <span class="nav-badge" id="navCartBadge" style="display: none;">0</span>
+      <span>Cart</span>
+    </div>
+    <div class="nav-item" onclick="location.href='orders.html'">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      <span>Orders</span>
+    </div>
+    <div class="nav-item" id="logoutNavItem">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      <span>Logout</span>
+    </div>
+  </nav>
+
+  <!-- Fullscreen Success Animation -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-checkmark">
+      <i class="fa-solid fa-check"></i>
+    </div>
+    <h2 style="font-size: 1.5rem; margin-bottom: 8px;">Order Confirmed!</h2>
+    <p style="color: var(--text-secondary); text-align: center; max-width: 250px; font-size: 0.9rem; margin-bottom: 24px;">Your order has been sent to the store. Preparing your products shortly!</p>
+    <button class="btn btn-primary" onclick="location.href='orders.html'">Track Order</button>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Script Modules -->
+  <script type="module">
+    import { getCartItems, updateCartQuantity, calculateBill } from '../js/cart.js'
+    import { getCustomerProfile, logoutAll, showToast } from '../js/auth.js'
+    import { placeOrder } from '../js/orders.js'
+    import { supabase } from '../js/supabase.js'
+
+    const cartEmptyState = document.getElementById('cartEmptyState')
+    const cartContentWrapper = document.getElementById('cartContentWrapper')
+    const cartRows = document.getElementById('cartRows')
+    const navCartBadge = document.getElementById('navCartBadge')
+
+    const billSubtotal = document.getElementById('billSubtotal')
+    const billDelivery = document.getElementById('billDelivery')
+    const billTotal = document.getElementById('billTotal')
+
+    const checkoutForm = document.getElementById('checkoutForm')
+    const paymentSelector = document.querySelector('.payment-selector')
+    
+    let activePaymentMethod = 'COD'
+    let currentCartItems = []
+
+    // --- PROTECT ROUTE: REQUIRE LOGIN BEFORE CHECKOUT ---
+    async function checkAuth() {
+      const profile = await getCustomerProfile()
+      const logoutNavItem = document.getElementById('logoutNavItem')
+
+      if (!profile) {
+        showToast('Please login to place an order.', 'warning')
+        setTimeout(() => {
+          window.location.href = 'customer-login.html'
+        }, 1500)
+        return null
+      }
+      
+      // Auto-fill profile details in delivery form
+      document.getElementById('shipName').value = profile.full_name || ''
+      document.getElementById('shipPhone').value = profile.mobile_number || ''
+
+      logoutNavItem.style.display = 'flex'
+      logoutNavItem.addEventListener('click', async () => {
+        await logoutAll()
+        setTimeout(() => {
+          window.location.href = 'dashboard.html'
+        }, 800)
+      })
+
+      return profile
+    }
+
+    // --- RENDER CART LIST ---
+    async function loadCart() {
+      currentCartItems = await getCartItems()
+
+      if (currentCartItems.length === 0) {
+        cartEmptyState.style.display = 'flex'
+        cartContentWrapper.style.display = 'none'
+        navCartBadge.style.display = 'none'
+        return
+      }
+
+      cartEmptyState.style.display = 'none'
+      cartContentWrapper.style.display = 'block'
+
+      // Render cart rows
+      cartRows.innerHTML = ''
+      currentCartItems.forEach(item => {
+        const row = document.createElement('div')
+        row.className = 'cart-item-row'
+        
+        const fallback = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?auto=format&fit=crop&w=600&q=80'
+        const imgUrl = item.image_url || fallback
+        const formattedPrice = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price)
+
+        row.innerHTML = `
+          <img src="${imgUrl}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: var(--radius-sm);">
+          <div class="cart-item-info">
+            <h4 class="cart-item-title">${item.name}</h4>
+            <div class="cart-item-price-calc">${formattedPrice} × ${item.quantity}</div>
+          </div>
+          <div class="cart-item-qty-actions">
+            <button class="qty-btn dec-btn" data-id="${item.id}"><i class="fa-solid fa-minus"></i></button>
+            <span class="qty-val">${item.quantity}</span>
+            <button class="qty-btn inc-btn" data-id="${item.id}"><i class="fa-solid fa-plus"></i></button>
+          </div>
+        `
+        cartRows.appendChild(row)
+      })
+
+      // Bind quantity controller buttons
+      cartRows.querySelectorAll('.dec-btn').forEach(btn => {
+        btn.addEventListener('click', () => adjustQuantity(btn.getAttribute('data-id'), -1))
+      })
+      cartRows.querySelectorAll('.inc-btn').forEach(btn => {
+        btn.addEventListener('click', () => adjustQuantity(btn.getAttribute('data-id'), 1))
+      })
+
+      // Calculate totals
+      const bill = calculateBill(currentCartItems)
+      
+      const inrFormatter = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' })
+      billSubtotal.textContent = inrFormatter.format(bill.subtotal)
+      billDelivery.textContent = bill.deliveryCharge > 0 ? inrFormatter.format(bill.deliveryCharge) : 'Free Delivery'
+      billTotal.textContent = inrFormatter.format(bill.total)
+
+      // Update navbar count
+      navCartBadge.style.display = 'flex'
+      navCartBadge.textContent = bill.totalItems
+    }
+
+    async function adjustQuantity(productId, delta) {
+      const ok = await updateCartQuantity(productId, delta)
+      if (ok) {
+        loadCart()
+      }
+    }
+
+    // --- PAYMENT SELECTOR ACTION ---
+    paymentSelector.addEventListener('click', (e) => {
+      const option = e.target.closest('.payment-option')
+      if (!option) return
+
+      paymentSelector.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'))
+      option.classList.add('active')
+      activePaymentMethod = option.getAttribute('data-method')
+    })
+
+    // --- CHECKOUT SUBMIT ACTION ---
+    checkoutForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+
+      const authProfile = await getCustomerProfile()
+      if (!authProfile) {
+        showToast('Please login to place an order.', 'warning')
+        return
+      }
+
+      const name = document.getElementById('shipName').value.trim()
+      const phone = document.getElementById('shipPhone').value.trim()
+      const address = document.getElementById('shipAddress').value.trim()
+
+      const bill = calculateBill(currentCartItems)
+      const placeBtn = document.getElementById('placeOrderBtn')
+
+      placeBtn.disabled = true
+      placeBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Placing Order...'
+
+      const orderData = {
+        name,
+        phone,
+        address,
+        paymentMethod: activePaymentMethod,
+        items: currentCartItems,
+        totalPrice: bill.total,
+        totalItems: bill.totalItems
+      }
+
+      const result = await placeOrder(orderData)
+      
+      placeBtn.disabled = false
+      placeBtn.innerHTML = 'Confirm and Order <i class="fa-solid fa-truck-fast"></i>'
+
+      if (result.success) {
+        // Trigger Success fullscreen pop-up
+        document.getElementById('successOverlay').classList.add('active')
+      }
+    })
+
+    // Initialization
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth()
+      if (user) {
+        loadCart()
+      }
+    })
+  </script>
+</body>
+</html>

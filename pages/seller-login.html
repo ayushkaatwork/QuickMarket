@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Market — Seller Admin Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body class="auth-wrapper">
+
+  <!-- Background Blur Orbs -->
+  <div class="blur-orb orb-1"></div>
+  <div class="blur-orb orb-2"></div>
+
+  <div class="auth-card">
+    <div class="auth-header">
+      <a href="../index.html" class="auth-logo">
+        <span class="logo-icon" style="background: linear-gradient(135deg, var(--danger), var(--warning));"><i class="fa-solid fa-user-shield"></i></span>
+        <span>Admin<span>Portal</span></span>
+      </a>
+      <p class="auth-subtitle">Authorized Seller login screen</p>
+    </div>
+
+    <!-- Admin Form -->
+    <form id="sellerLoginForm">
+      <div class="form-group">
+        <label class="form-label" for="adminUser">Username</label>
+        <div class="form-control-wrapper">
+          <i class="form-control-icon fa-solid fa-user-gear"></i>
+          <input type="text" id="adminUser" class="form-control" placeholder="admin" required autocomplete="off">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="adminPassword">Password</label>
+        <div class="form-control-wrapper">
+          <i class="form-control-icon fa-solid fa-key"></i>
+          <input type="password" id="adminPassword" class="form-control" placeholder="••••••••" required>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" style="background: linear-gradient(135deg, var(--primary), var(--accent)); color: #ffffff; margin-top: 10px;">
+        Access Dashboard <i class="fa-solid fa-circle-arrow-right"></i>
+      </button>
+      
+      <div class="form-switch" style="margin-top: 24px;">
+        <a href="customer-login.html" style="color: var(--text-secondary); text-decoration: underline;">Are you a Customer? Login here</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Seller login execution -->
+  <script type="module">
+    import { loginSeller } from '../js/auth.js'
+
+    const form = document.getElementById('sellerLoginForm')
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault()
+      const user = document.getElementById('adminUser').value.trim()
+      const pass = document.getElementById('adminPassword').value
+
+      const res = loginSeller(user, pass)
+      if (res.success) {
+        setTimeout(() => {
+          window.location.href = './seller-dashboard.html'
+        }, 1000)
+      }
+    })
+  </script>
+</body>
+</html>

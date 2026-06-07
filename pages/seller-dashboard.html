@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Market — Seller Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    /* Admin specific layout adjustments */
+    .admin-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .stock-badge {
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .stock-badge.ok { background: rgba(22, 163, 74, 0.12); color: var(--primary); }
+    .stock-badge.low { background: rgba(251, 191, 36, 0.15); color: var(--warning); }
+    .stock-badge.out { background: rgba(244, 63, 94, 0.15); color: var(--danger); }
+  </style>
+</head>
+<body>
+
+  <!-- Background Blur Orbs -->
+  <div class="blur-orb orb-1"></div>
+  <div class="blur-orb orb-2"></div>
+
+  <!-- Seller Header -->
+  <header class="seller-header">
+    <div class="seller-header-container">
+      <div class="seller-title">
+        <i class="fa-solid fa-store"></i>
+        <span>Quick Market <strong>Seller Dashboard</strong></span>
+      </div>
+      <button class="btn btn-secondary btn-sm" id="sellerLogoutBtn" style="padding: 6px 12px;"><i class="fa-solid fa-power-off"></i> Logout</button>
+    </div>
+  </header>
+
+  <main class="app-container" style="padding-top: 16px; padding-bottom: 90px;">
+    
+    <!-- Tab Controls -->
+    <div class="seller-tabs">
+      <div class="seller-tab active" id="tabOrders">Orders</div>
+      <div class="seller-tab" id="tabProducts">Products</div>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div id="sectionOrders" class="admin-grid" style="display: block;">
+      <div class="section-header" style="margin-bottom: 12px;">
+        <h3 style="font-size: 1.1rem; color: var(--text-secondary);">Manage Incoming Orders</h3>
+      </div>
+      <div id="sellerOrdersList">
+        <!-- Injected dynamically via JS -->
+      </div>
+    </div>
+
+    <!-- PRODUCTS TAB -->
+    <div id="sectionProducts" class="admin-grid" style="display: none;">
+      <div class="section-header" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 1.1rem; color: var(--text-secondary);">Catalog Directory</h3>
+        <button class="btn btn-primary btn-sm" id="openAddProductModalBtn">
+          <i class="fa-solid fa-plus"></i> Add Item
+        </button>
+      </div>
+      <div id="sellerProductsList">
+        <!-- Injected dynamically via JS -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ADD / EDIT PRODUCT DIALOG MODAL -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add Product</h3>
+        <button class="close-sidebar-btn" id="closeModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="productForm">
+          <input type="hidden" id="formProductId">
+          
+          <div class="form-group">
+            <label class="form-label" for="prodName">Product Name *</label>
+            <div class="form-control-wrapper">
+              <i class="form-control-icon fa-solid fa-tag"></i>
+              <input type="text" id="prodName" class="form-control" placeholder="Organic Apples" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="prodCategory">Category *</label>
+            <div class="form-control-wrapper">
+              <i class="form-control-icon fa-solid fa-box"></i>
+              <select id="prodCategory" class="form-control" style="padding-left: 42px;" required>
+                <option value="Vegetables">Vegetables</option>
+                <option value="Fruits">Fruits</option>
+                <option value="Grocery">Grocery</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px;">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label" for="prodPrice">Price (INR) *</label>
+              <div class="form-control-wrapper">
+                <i class="form-control-icon fa-solid fa-indian-rupee-sign"></i>
+                <input type="number" id="prodPrice" class="form-control" placeholder="120" min="0" step="0.01" required>
+              </div>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label" for="prodStock">Stock Quantity *</label>
+              <div class="form-control-wrapper">
+                <i class="form-control-icon fa-solid fa-cubes"></i>
+                <input type="number" id="prodStock" class="form-control" placeholder="50" min="0" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="prodImage">Image URL</label>
+            <div class="form-control-wrapper" style="display: flex; gap: 8px; align-items: center;">
+              <div style="position: relative; flex: 1; display: flex; align-items: center;">
+                <i class="form-control-icon fa-solid fa-image" style="position: absolute; left: 14px;"></i>
+                <input type="url" id="prodImage" class="form-control" placeholder="https://unsplash.com/...">
+              </div>
+              <input type="file" id="prodImageFile" accept="image/*" style="display: none;">
+              <button type="button" class="btn btn-secondary btn-icon" id="cameraBtn" title="Take photo or upload image" style="flex-shrink: 0; width: 44px; height: 44px; border-radius: var(--radius-md); padding: 0; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-camera"></i>
+              </button>
+            </div>
+            <small style="color: var(--text-muted); display: block; margin-top: 4px;" id="uploadStatusText">Or capture/upload an image from your device</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="prodDesc">Description</label>
+            <div class="form-control-wrapper">
+              <i class="form-control-icon fa-solid fa-comment-dots" style="top: 15px;"></i>
+              <textarea id="prodDesc" class="form-control" placeholder="Details about origin, weight, packaging..." rows="3" style="padding-left: 42px;"></textarea>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary btn-sm" id="cancelModalBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-sm" id="saveProductBtn">Save Product</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Script Modules -->
+  <script type="module">
+    import { isSellerAuthenticated, logoutAll, showToast } from '../js/auth.js'
+    import { fetchProducts, categoryFallbacks } from '../js/products.js'
+    import { addProduct, editProduct, deleteProduct, fetchAllOrders, updateOrderStatus, subscribeToNewOrders } from '../js/seller.js'
+    import { fetchOrderItems } from '../js/orders.js'
+    import { supabase } from '../js/supabase.js'
+
+    const sellerLogoutBtn = document.getElementById('sellerLogoutBtn')
+    const tabOrders = document.getElementById('tabOrders')
+    const tabProducts = document.getElementById('tabProducts')
+    
+    const sectionOrders = document.getElementById('sectionOrders')
+    const sectionProducts = document.getElementById('sectionProducts')
+
+    const sellerOrdersList = document.getElementById('sellerOrdersList')
+    const sellerProductsList = document.getElementById('sellerProductsList')
+
+    // Modal elements
+    const productModal = document.getElementById('productModal')
+    const openAddProductModalBtn = document.getElementById('openAddProductModalBtn')
+    const closeModalBtn = document.getElementById('closeModalBtn')
+    const cancelModalBtn = document.getElementById('cancelModalBtn')
+    const productForm = document.getElementById('productForm')
+    const modalTitle = document.getElementById('modalTitle')
+    const cameraBtn = document.getElementById('cameraBtn')
+    const prodImageFile = document.getElementById('prodImageFile')
+    const prodImage = document.getElementById('prodImage')
+    const uploadStatusText = document.getElementById('uploadStatusText')
+    const saveProductBtn = document.getElementById('saveProductBtn')
+
+    // --- PROTECT ROUTE: CHECK SELLER AUTH ---
+    function checkAuth() {
+      if (!isSellerAuthenticated()) {
+        window.location.href = 'seller-login.html'
+      }
+    }
+
+    sellerLogoutBtn.addEventListener('click', async () => {
+      await logoutAll()
+      window.location.href = 'seller-login.html'
+    })
+
+    // --- TAB Toggling ---
+    tabOrders.addEventListener('click', () => {
+      tabOrders.classList.add('active')
+      tabProducts.classList.remove('active')
+      sectionOrders.style.display = 'block'
+      sectionProducts.style.display = 'none'
+      loadOrders()
+    })
+
+    tabProducts.addEventListener('click', () => {
+      tabProducts.classList.add('active')
+      tabOrders.classList.remove('active')
+      sectionProducts.style.display = 'block'
+      sectionOrders.style.display = 'none'
+      loadProducts()
+    })
+
+    // --- MANAGE PRODUCTS TABS ---
+    async function loadProducts() {
+      sellerProductsList.innerHTML = ''
+      const products = await fetchProducts('all')
+
+      if (products.length === 0) {
+        sellerProductsList.innerHTML = `<p style="text-align: center; color: var(--text-muted); margin-top: 40px;">No products in catalog yet.</p>`
+        return
+      }
+
+      products.forEach(p => {
+        const row = document.createElement('div')
+        row.className = 'cart-item-row'
+        
+        let stockClass = 'ok'
+        if (p.stock <= 0) stockClass = 'out'
+        else if (p.stock < 5) stockClass = 'low'
+
+        const fallbackImg = categoryFallbacks[p.category] || categoryFallbacks['Vegetables']
+        const formattedPrice = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(p.price)
+
+        row.innerHTML = `
+          <img src="${p.image_url || fallbackImg}" alt="${p.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: var(--radius-sm);">
+          <div class="cart-item-info">
+            <h4 class="cart-item-title" style="font-size: 0.95rem;">${p.name}</h4>
+            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">
+              ${formattedPrice} &nbsp;|&nbsp; <span class="stock-badge ${stockClass}">Stock: ${p.stock}</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm edit-prod-btn" data-id="${p.id}"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-danger btn-sm delete-prod-btn" data-id="${p.id}"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        `
+        sellerProductsList.appendChild(row)
+      })
+
+      // Bind product actions
+      sellerProductsList.querySelectorAll('.edit-prod-btn').forEach(btn => {
+        btn.addEventListener('click', () => openEditModal(btn.getAttribute('data-id')))
+      })
+      sellerProductsList.querySelectorAll('.delete-prod-btn').forEach(btn => {
+        btn.addEventListener('click', () => handleDeleteProduct(btn.getAttribute('data-id')))
+      })
+    }
+
+    // Modal actions
+    openAddProductModalBtn.addEventListener('click', () => {
+      productForm.reset()
+      document.getElementById('formProductId').value = ''
+      modalTitle.textContent = 'Add Product'
+      uploadStatusText.innerHTML = 'Or capture/upload an image from your device'
+      productModal.classList.add('active')
+    })
+
+    const hideModal = () => productModal.classList.remove('active')
+    closeModalBtn.addEventListener('click', hideModal)
+    cancelModalBtn.addEventListener('click', hideModal)
+
+    async function openEditModal(productId) {
+      const { data: p } = await supabase.from('products').select('*').eq('id', productId).single()
+      if (p) {
+        document.getElementById('formProductId').value = p.id
+        document.getElementById('prodName').value = p.name
+        document.getElementById('prodCategory').value = p.category
+        document.getElementById('prodPrice').value = p.price
+        document.getElementById('prodStock').value = p.stock
+        document.getElementById('prodImage').value = p.image_url || ''
+        document.getElementById('prodDesc').value = p.description || ''
+
+        modalTitle.textContent = 'Edit Product'
+        uploadStatusText.innerHTML = 'Or capture/upload an image from your device'
+        productModal.classList.add('active')
+      }
+    }
+
+    // --- CAMERA & FILE UPLOAD HANDLERS ---
+    cameraBtn.addEventListener('click', () => {
+      prodImageFile.click()
+    })
+
+    prodImageFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('Image size should be less than 5MB.', 'warning')
+        return
+      }
+
+      try {
+        uploadStatusText.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="color: var(--primary);"></i> Uploading image to storage...'
+        cameraBtn.disabled = true
+        saveProductBtn.disabled = true
+
+        // Generate a unique filename
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`
+        const filePath = `${fileName}`
+
+        // Upload to Supabase Storage Bucket
+        const { data, error } = await supabase.storage
+          .from('products')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true
+          })
+
+        if (error) throw error
+
+        // Get public URL
+        const { data: publicUrlData } = supabase.storage
+          .from('products')
+          .getPublicUrl(filePath)
+
+        const publicUrl = publicUrlData.publicUrl
+        prodImage.value = publicUrl
+        
+        uploadStatusText.innerHTML = '<i class="fa-solid fa-circle-check" style="color: var(--success);"></i> Image uploaded successfully!'
+        showToast('Image uploaded successfully!', 'success')
+      } catch (err) {
+        console.error('Image upload failed:', err)
+        uploadStatusText.innerHTML = '<i class="fa-solid fa-circle-exclamation" style="color: var(--danger);"></i> Upload failed. Try again.'
+        showToast('Failed to upload image. Please try again.', 'danger')
+      } finally {
+        cameraBtn.disabled = false
+        saveProductBtn.disabled = false
+      }
+    })
+
+    // Save product (Add or Edit)
+    productForm.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const productId = document.getElementById('formProductId').value
+      const details = {
+        name: document.getElementById('prodName').value.trim(),
+        category: document.getElementById('prodCategory').value,
+        price: parseFloat(document.getElementById('prodPrice').value),
+        stock: parseInt(document.getElementById('prodStock').value),
+        imageUrl: document.getElementById('prodImage').value.trim(),
+        description: document.getElementById('prodDesc').value.trim()
+      }
+
+      let res
+      if (productId) {
+        res = await editProduct(productId, details)
+      } else {
+        res = await addProduct(details)
+      }
+
+      if (res.success) {
+        hideModal()
+        loadProducts()
+      }
+    })
+
+    async function handleDeleteProduct(id) {
+      if (confirm('Are you sure you want to delete this product from directory?')) {
+        const res = await deleteProduct(id)
+        if (res.success) {
+          loadProducts()
+        }
+      }
+    }
+
+    // --- MANAGE ORDERS TABS ---
+    async function loadOrders() {
+      sellerOrdersList.innerHTML = ''
+      const orders = await fetchAllOrders()
+
+      if (orders.length === 0) {
+        sellerOrdersList.innerHTML = `<p style="text-align: center; color: var(--text-muted); margin-top: 40px;">No orders found.</p>`
+        return
+      }
+
+      for (const o of orders) {
+        const row = document.createElement('div')
+        row.className = 'seller-order-card'
+        
+        const inrFormatter = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' })
+        const dateStr = new Date(o.created_at).toLocaleString('en-IN', {
+          day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+        })
+
+        let actionsHtml = ''
+        if (o.order_status === 'Pending') {
+          actionsHtml = `
+            <button class="btn btn-primary btn-sm accept-btn" data-id="${o.id}">Accept</button>
+            <button class="btn btn-danger btn-sm reject-btn" data-id="${o.id}">Reject</button>
+          `
+        } else if (o.order_status === 'Accepted') {
+          actionsHtml = `<button class="btn btn-secondary btn-sm pack-btn" data-id="${o.id}"><i class="fa-solid fa-box-open"></i> Pack Order</button>`
+        } else if (o.order_status === 'Packed') {
+          actionsHtml = `<button class="btn btn-secondary btn-sm ship-btn" data-id="${o.id}"><i class="fa-solid fa-motorcycle"></i> Ship Order</button>`
+        } else if (o.order_status === 'Out for Delivery') {
+          actionsHtml = `<button class="btn btn-primary btn-sm deliver-btn" data-id="${o.id}"><i class="fa-solid fa-circle-check"></i> Deliver</button>`
+        } else {
+          actionsHtml = `<span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">Completed (${o.order_status})</span>`
+        }
+
+        row.innerHTML = `
+          <div class="seller-order-meta">
+            <div>
+              <span class="seller-order-customer">${o.customer_name}</span>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">${dateStr}</div>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-weight: 700; color: var(--accent);">${inrFormatter.format(o.total_price)}</span>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">${o.payment_method}</div>
+            </div>
+          </div>
+          
+          <div class="seller-order-items" id="seller-items-${o.id}">
+            Loading items...
+          </div>
+
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px;">
+            <i class="fa-solid fa-phone" style="color: var(--primary); margin-right: 4px;"></i> ${o.customer_phone} <br>
+            <i class="fa-solid fa-location-dot" style="color: var(--primary); margin-right: 4px; margin-top: 4px;"></i> ${o.delivery_address}
+          </div>
+
+          <div class="seller-order-footer">
+            <span style="font-size: 0.8rem; font-weight: 600; color: var(--warning)">Status: ${o.order_status}</span>
+            <div class="order-actions">
+              ${actionsHtml}
+            </div>
+          </div>
+        `
+        sellerOrdersList.appendChild(row)
+        
+        loadSellerItemsDetails(o.id)
+      }
+
+      // Bind status update buttons
+      sellerOrdersList.querySelectorAll('.accept-btn').forEach(btn => {
+        btn.addEventListener('click', () => changeOrderStatus(btn.getAttribute('data-id'), 'Accepted'))
+      })
+      sellerOrdersList.querySelectorAll('.reject-btn').forEach(btn => {
+        btn.addEventListener('click', () => changeOrderStatus(btn.getAttribute('data-id'), 'Rejected'))
+      })
+      sellerOrdersList.querySelectorAll('.pack-btn').forEach(btn => {
+        btn.addEventListener('click', () => changeOrderStatus(btn.getAttribute('data-id'), 'Packed'))
+      })
+      sellerOrdersList.querySelectorAll('.ship-btn').forEach(btn => {
+        btn.addEventListener('click', () => changeOrderStatus(btn.getAttribute('data-id'), 'Out for Delivery'))
+      })
+      sellerOrdersList.querySelectorAll('.deliver-btn').forEach(btn => {
+        btn.addEventListener('click', () => changeOrderStatus(btn.getAttribute('data-id'), 'Delivered'))
+      })
+    }
+
+    async function loadSellerItemsDetails(orderId) {
+      const itemsNode = document.getElementById(`seller-items-${orderId}`)
+      if (!itemsNode) return
+      
+      const items = await fetchOrderItems(orderId)
+      if (items.length === 0) {
+        itemsNode.textContent = 'No item details.'
+        return
+      }
+
+      const rows = items.map(i => `
+        <div class="seller-order-item">
+          <span>${i.products ? i.products.name : 'Product'}</span>
+          <span>x${i.quantity}</span>
+        </div>
+      `).join('')
+      
+      itemsNode.innerHTML = rows
+    }
+
+    async function changeOrderStatus(orderId, status) {
+      const res = await updateOrderStatus(orderId, status)
+      if (res.success) {
+        loadOrders()
+      }
+    }
+
+    // Initialization
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth()
+      loadOrders()
+
+      // Subscribe to real-time notification warnings for incoming orders
+      subscribeToNewOrders((newOrder) => {
+        // Automatically reload orders tab to show new arrival
+        if (tabOrders.classList.contains('active')) {
+          loadOrders()
+        }
+      })
+    })
+  </script>
+</body>
+</html>
