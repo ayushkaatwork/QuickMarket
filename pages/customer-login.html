@@ -133,6 +133,18 @@
         Register Profile <i class="fa-solid fa-user-plus"></i>
       </button>
     </form>
+
+    <!-- Visual Divider -->
+    <div class="auth-divider" style="text-align: center; margin: 24px 0; position: relative;">
+      <span style="background: var(--bg-secondary); padding: 0 10px; color: var(--text-muted); font-size: 0.85rem; position: relative; z-index: 1;">or</span>
+      <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid var(--border-color); margin: 0; z-index: 0;">
+    </div>
+
+    <!-- Google Login Button -->
+    <button type="button" id="googleLoginBtn" class="btn btn-secondary btn-block" style="display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid var(--border-color); margin-top: 10px;">
+      <i class="fa-brands fa-google" style="color: #ea4335; font-size: 1.1rem;"></i>
+      <span>Continue with Google</span>
+    </button>
   </div>
 
   <!-- Toast Container -->
@@ -140,7 +152,7 @@
 
   <!-- Authentication logic module -->
   <script type="module">
-    import { signUpCustomer, loginCustomer, sendOtp, verifyOtp, showToast } from '../js/auth.js'
+    import { signUpCustomer, loginCustomer, loginWithGoogle, sendOtp, verifyOtp, showToast } from '../js/auth.js'
     import { supabase } from '../js/supabase.js'
 
     const tabSignIn = document.getElementById('tabSignIn')
@@ -292,6 +304,18 @@
         // Switch to login tab
         tabSignIn.click()
         tabPassword.click()
+      }
+    })
+
+    // Handle Google Login Click
+    const googleLoginBtn = document.getElementById('googleLoginBtn')
+    googleLoginBtn.addEventListener('click', async () => {
+      googleLoginBtn.disabled = true
+      googleLoginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connecting to Google...'
+      const res = await loginWithGoogle()
+      if (!res.success) {
+        googleLoginBtn.disabled = false
+        googleLoginBtn.innerHTML = '<i class="fa-brands fa-google" style="color: #ea4335; font-size: 1.1rem;"></i> <span>Continue with Google</span>'
       }
     })
   </script>

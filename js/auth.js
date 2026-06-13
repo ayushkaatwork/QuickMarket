@@ -82,6 +82,25 @@ async function loginCustomer(email, password) {
   }
 }
 
+// --- GOOGLE SIGN IN (OAUTH) ---
+async function loginWithGoogle() {
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/pages/dashboard.html'
+      }
+    })
+
+    if (error) throw error
+    return { success: true }
+  } catch (err) {
+    console.error('Google login error:', err)
+    showToast(err.message || 'Error occurred initiating Google login.', 'danger')
+    return { success: false }
+  }
+}
+
 // --- OTP AUTHENTICATION ---
 async function sendOtp(emailOrPhone) {
   try {
@@ -221,6 +240,7 @@ async function getCustomerProfile() {
 export {
   signUpCustomer,
   loginCustomer,
+  loginWithGoogle,
   sendOtp,
   verifyOtp,
   loginSeller,
