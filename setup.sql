@@ -41,6 +41,10 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_customer();
 
+-- Clean up any legacy auto-confirm triggers that bypass email verification
+DROP TRIGGER IF EXISTS on_auth_user_created_before ON auth.users;
+DROP FUNCTION IF EXISTS public.auto_confirm_user();
+
 -- 2. Create PRODUCTS table
 CREATE TABLE IF NOT EXISTS public.products (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

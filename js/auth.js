@@ -25,25 +25,34 @@ function showToast(message, type = 'info') {
 
 // --- CUSTOMER SIGNUP ---
 async function signUpCustomer(email, password, fullName, mobileNumber, username) {
+  console.log(`[Auth Profile] Starting customer registration for email: ${email}, username: ${username}`);
   try {
     // 1. Verify username uniqueness
+    console.log(`[Auth Profile] Checking uniqueness for username: ${username}`);
     const { data: existingUser, error: queryError } = await supabase
       .from('customers')
       .select('username')
       .eq('username', username)
       .maybeSingle()
 
-    if (queryError) throw queryError
+    if (queryError) {
+      console.error('[Auth Profile] Username verification failed:', queryError);
+      throw queryError;
+    }
     if (existingUser) {
+      console.warn(`[Auth Profile] Username "${username}" is already taken.`);
       showToast('Username already taken. Please choose another.', 'warning')
       return { success: false }
     }
 
     // 2. Sign up via Supabase Auth
+    const redirectUrl = window.location.origin + '/pages/customer-login.html';
+    console.log(`[Auth Profile] Submitting signup to Supabase Auth. Redirect URL: ${redirectUrl}`);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
           mobile_number: mobileNumber,
@@ -52,12 +61,28 @@ async function signUpCustomer(email, password, fullName, mobileNumber, username)
       }
     })
 
-    if (error) throw error
+    if (error) {
+      console.error('[Auth Profile] Supabase Auth signUp returned error:', error);
+      throw error;
+    }
+
+    console.log('[Auth Profile] Supabase Auth signUp succeeded:', data);
+    
+    // Check confirmation status
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      console.warn('[Auth Profile] User signup warning: Email already registered or provider mismatch.');
+    }
+    
+    if (data.session) {
+      console.log('[Auth Profile] Session established immediately (autoconfirm enabled).');
+    } else {
+      console.log('[Auth Profile] Signup successful. Confirmation email pending verification.');
+    }
 
     showToast('Registration successful! Please check your email for confirmation.', 'success')
     return { success: true, data }
   } catch (err) {
-    console.error('Signup error:', err)
+    console.error('[Auth Profile] Signup handler error catch:', err)
     showToast(err.message || 'Error occurred during registration.', 'danger')
     return { success: false }
   }
@@ -65,18 +90,23 @@ async function signUpCustomer(email, password, fullName, mobileNumber, username)
 
 // --- CUSTOMER LOGIN (PASSWORD) ---
 async function loginCustomer(email, password) {
+  console.log(`[Auth Profile] Attempting password login for email: ${email}`);
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     })
 
-    if (error) throw error
+    if (error) {
+      console.error('[Auth Profile] Supabase Auth signInWithPassword returned error:', error);
+      throw error;
+    }
 
+    console.log('[Auth Profile] Supabase login succeeded for user:', data.user.id);
     showToast('Successfully logged in!', 'success')
     return { success: true, user: data.user }
   } catch (err) {
-    console.error('Login error:', err)
+    console.error('[Auth Profile] Login handler error catch:', err)
     showToast(err.message || 'Invalid login details.', 'danger')
     return { success: false }
   }
@@ -134,6 +164,7 @@ async function sendOtp(emailOrPhone) {
 }
 
 async function verifyOtp(emailOrPhone, token, redirectTo) {
+  console.log(`[Auth Profile] Starting OTP verification for: ${emailOrPhone}`);
   try {
     const isEmail = emailOrPhone.includes('@')
     if (isEmail) {
@@ -142,13 +173,19 @@ async function verifyOtp(emailOrPhone, token, redirectTo) {
         type: 'email',
         email: emailOrPhone
       }
+      console.log(`[Auth Profile] Verifying email OTP via Supabase Auth:`, params);
       const { data, error } = await supabase.auth.verifyOtp(params)
-      if (error) throw error
+      if (error) {
+        console.error('[Auth Profile] Supabase email verifyOtp returned error:', error);
+        throw error;
+      }
+      console.log('[Auth Profile] Email OTP verified successfully. User:', data.user.id);
       showToast('OTP verified successfully!', 'success')
       return { success: true, user: data.user }
     } else {
       // WhatsApp OTP verification via Node.js backend on localhost:5000
       const cleanPhone = emailOrPhone.replace(/^\+/, '')
+      console.log(`[Auth Profile] Sending WhatsApp OTP verification request to Node backend for phone: ${cleanPhone}`);
       const response = await fetch('http://localhost:5000/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -156,22 +193,33 @@ async function verifyOtp(emailOrPhone, token, redirectTo) {
       })
       const data = await response.json()
       if (!response.ok || !data.success) {
+        console.error('[Auth Profile] Backend WhatsApp OTP verification failed:', data);
         throw new Error(data.message || 'OTP verification failed')
       }
+      
+      console.log('[Auth Profile] Backend WhatsApp OTP verified. Response data:', data);
+
       if (data.hashed_token) {
+        console.log('[Auth Profile] Verification returned hashed token. Logging in client-side using verifyOtp...');
         const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
           token_hash: data.hashed_token,
           type: 'email'
         })
-        if (verifyError) throw verifyError
+        if (verifyError) {
+          console.error('[Auth Profile] Supabase verifyOtp with hashed token failed:', verifyError);
+          throw verifyError;
+        }
+        console.log('[Auth Profile] Hashed token verification success. User:', verifyData.user.id);
         showToast('OTP verified successfully!', 'success')
         return { success: true, user: verifyData.user }
       }
+      
+      console.log('[Auth Profile] Verification returned action link. Redirecting user to:', data.action_link);
       showToast('OTP verified successfully!', 'success')
       return { success: true, action_link: data.action_link }
     }
   } catch (err) {
-    console.error('OTP verification error:', err)
+    console.error('[Auth Profile] OTP verification handler error catch:', err)
     showToast(err.message || 'Invalid or expired OTP token.', 'danger')
     return { success: false }
   }
