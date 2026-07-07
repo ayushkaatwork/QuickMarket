@@ -171,9 +171,23 @@
   </main>
 
   <script type="module">
-    // Auto category selector handler for dashboard redirects
+    import { supabase } from './js/supabase.js'
+
+    // Auto-redirect to dashboard if session exists (e.g. returning from Google OAuth redirect)
+    async function checkAuthAndRedirect() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          console.log('[Auth Profile] Active session detected. Redirecting to dashboard...');
+          window.location.href = 'pages/dashboard.html'
+        }
+      } catch (err) {
+        console.error('[Auth Profile] Error checking session on landing page:', err)
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-      // Clean up past sessions if any
+      checkAuthAndRedirect()
     })
   </script>
 </body>
