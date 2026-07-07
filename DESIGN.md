@@ -1,4 +1,4 @@
-# Quick Market Design System
+# Apna Market Design System
 
 ## Visual Guidelines
 - **Color Mode**: Light Mode

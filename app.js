@@ -13,7 +13,7 @@ try {
 
 // App State
 let listings = []
-let cart = JSON.parse(localStorage.getItem('quickmarket_cart')) || []
+let cart = JSON.parse(localStorage.getItem('apnamarket_cart')) || []
 let currentCategory = 'all'
 let searchQuery = ''
 let currentSort = 'newest'
@@ -256,14 +256,14 @@ function addToCart(id) {
   }
 
   cart.push(item)
-  localStorage.setItem('quickmarket_cart', JSON.stringify(cart))
+  localStorage.setItem('apnamarket_cart', JSON.stringify(cart))
   updateCartUI()
   showToast(`Added "${item.title}" to your bag!`, 'success')
 }
 
 function removeFromCart(id) {
   cart = cart.filter(c => c.id !== id)
-  localStorage.setItem('quickmarket_cart', JSON.stringify(cart))
+  localStorage.setItem('apnamarket_cart', JSON.stringify(cart))
   updateCartUI()
   showToast("Item removed from bag.", "info")
 }
@@ -413,9 +413,9 @@ function initEventListeners() {
   // Checkout action
   checkoutBtn.addEventListener('click', () => {
     if (cart.length === 0) return
-    showToast("Checkout completed! Thanks for demoing QuickMarket.", "success")
+    showToast("Checkout completed! Thanks for demoing Apna Market.", "success")
     cart = []
-    localStorage.removeItem('quickmarket_cart')
+    localStorage.removeItem('apnamarket_cart')
     updateCartUI()
     toggleCart(false)
   })

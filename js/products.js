@@ -68,10 +68,11 @@ function renderProductGrid(products, containerId, onAddToCartCallback) {
   if (emptyState) emptyState.style.display = 'none'
   container.style.display = 'grid'
 
-  products.forEach(product => {
+  products.forEach((product, index) => {
     const card = document.createElement('div')
     const isOutOfStock = product.stock <= 0
-    card.className = `product-card ${isOutOfStock ? 'out-of-stock' : ''}`
+    card.className = `product-card animate-slide-up ${isOutOfStock ? 'out-of-stock' : ''}`
+    card.style.animationDelay = `${index * 60}ms`
     
     // Image handling with fallback
     const imgUrl = product.image_url || categoryFallbacks[product.category] || categoryFallbacks['Vegetables']

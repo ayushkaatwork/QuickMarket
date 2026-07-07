@@ -2,7 +2,7 @@ import { supabase } from './supabase.js'
 import { showToast } from './auth.js'
 
 // Cart State (Local cache)
-let localCart = JSON.parse(localStorage.getItem('quickmarket_cart')) || []
+let localCart = JSON.parse(localStorage.getItem('apnamarket_cart')) || []
 
 // --- FETCH CART ITEMS ---
 async function getCartItems() {
@@ -69,7 +69,7 @@ async function syncLocalCartToDb(customerId) {
     }
     // Clear local storage cart once synced
     localCart = []
-    localStorage.removeItem('quickmarket_cart')
+    localStorage.removeItem('apnamarket_cart')
   } catch (err) {
     console.error('Error syncing cart:', err)
   }
@@ -143,7 +143,7 @@ async function addToCart(productId) {
           quantity: 1
         })
       }
-      localStorage.setItem('quickmarket_cart', JSON.stringify(localCart))
+      localStorage.setItem('apnamarket_cart', JSON.stringify(localCart))
     }
 
     showToast(`Added "${product.name}" to cart!`, 'success')
@@ -200,7 +200,7 @@ async function updateCartQuantity(productId, delta) {
         } else {
           localCart[idx].quantity = newQty
         }
-        localStorage.setItem('quickmarket_cart', JSON.stringify(localCart))
+        localStorage.setItem('apnamarket_cart', JSON.stringify(localCart))
       }
     }
     return true
@@ -217,7 +217,7 @@ async function clearCart() {
     await supabase.from('cart').delete().eq('customer_id', user.id)
   }
   localCart = []
-  localStorage.removeItem('quickmarket_cart')
+  localStorage.removeItem('apnamarket_cart')
 }
 
 // --- CALCULATE BILL TOTALS ---

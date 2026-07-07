@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quick Market — Seller Admin Portal</title>
+  <title>Apna Market — Seller Admin Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -60,12 +60,12 @@
 
     const form = document.getElementById('sellerLoginForm')
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault()
       const user = document.getElementById('adminUser').value.trim()
       const pass = document.getElementById('adminPassword').value
 
-      const res = loginSeller(user, pass)
+      const res = await loginSeller(user, pass)
       if (res.success) {
         setTimeout(() => {
           window.location.href = './seller-dashboard.html'

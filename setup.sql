@@ -1,4 +1,4 @@
--- Setup Script for Quick Market
+-- Setup Script for Apna Market
 -- Copy and run this in your Supabase SQL Editor: https://supabase.com/dashboard/project/yujsfdqtcsbojjukvoyg/sql/new
 
 -- 1. Create CUSTOMERS profile table

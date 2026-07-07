@@ -225,30 +225,39 @@ async function verifyOtp(emailOrPhone, token, redirectTo) {
   }
 }
 
-// --- SELLER LOGIN (MANUAL CREDS) ---
-function loginSeller(username, password) {
-  if (
-    (username === 'admin' && password === 'admin123') ||
-    (username === 'Amrit' && password === 'Amrit@1972') ||
-    (username === 'amrit' && password === 'amrit1972')
-  ) {
-    localStorage.setItem('quickmarket_seller_logged', 'true')
-    showToast('Welcome, Administrator!', 'success')
-    return { success: true }
-  } else {
-    showToast('Invalid administrator credentials.', 'danger')
+// --- SELLER LOGIN (DATABASE CREDS) ---
+async function loginSeller(username, password) {
+  try {
+    const { data: isValid, error } = await supabase.rpc('verify_seller', {
+      p_username: username,
+      p_password: password
+    })
+
+    if (error) throw error
+
+    if (isValid) {
+      localStorage.setItem('apnamarket_seller_logged', 'true')
+      showToast('Welcome, Administrator!', 'success')
+      return { success: true }
+    } else {
+      showToast('Invalid administrator credentials.', 'danger')
+      return { success: false }
+    }
+  } catch (err) {
+    console.error('Seller authentication error:', err)
+    showToast('Authentication failed. Database connection error.', 'danger')
     return { success: false }
   }
 }
 
 // --- CHECK SELLER AUTH STATE ---
 function isSellerAuthenticated() {
-  return localStorage.getItem('quickmarket_seller_logged') === 'true'
+  return localStorage.getItem('apnamarket_seller_logged') === 'true'
 }
 
 // --- LOGOUT HELPERS ---
 async function logoutAll() {
-  localStorage.removeItem('quickmarket_seller_logged')
+  localStorage.removeItem('apnamarket_seller_logged')
   await supabase.auth.signOut()
   showToast('Logged out successfully.', 'info')
 }

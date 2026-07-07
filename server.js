@@ -1,4 +1,4 @@
-console.log("Starting QuickMarket server...");
+console.log("Starting ApnaMarket server...");
 console.log("Loading environment variables...");
 const dotenvResult = require("dotenv").config();
 if (dotenvResult.error) {
@@ -84,7 +84,7 @@ app.post("/send-otp", async (req, res) => {
                             parameters: [
                                 {
                                     type: "text",
-                                    text: "QuickMarket User"
+                                    text: "ApnaMarket User"
                                 },
                                 {
                                     type: "text",

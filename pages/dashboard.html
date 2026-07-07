@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quick Market — Storefront</title>
+  <title>Apna Market — Storefront</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -21,7 +21,7 @@
     <div class="header-container">
       <a href="../index.html" class="logo">
         <span class="logo-icon"><i class="fa-solid fa-leaf"></i></span>
-        <span class="logo-text">Quick<span>Market</span></span>
+        <span class="logo-text">Apna<span>Market</span></span>
       </a>
       
       <div class="search-bar-container">
@@ -38,7 +38,7 @@
     <!-- User Welcome Greeting -->
     <div class="hero-card" id="userGreetingCard" style="padding: 16px; margin-bottom: 16px; text-align: left; display: flex; align-items: center; justify-content: space-between;">
       <div>
-        <h2 style="font-size: 1.15rem; color: var(--text-primary);" id="welcomeUserText">Welcome to Quick Market!</h2>
+        <h2 style="font-size: 1.15rem; color: var(--text-primary);" id="welcomeUserText">Welcome to Apna Market!</h2>
         <p style="font-size: 0.8rem; color: var(--text-secondary);">Browse our fresh collections below</p>
       </div>
       <button class="btn btn-secondary btn-sm" id="authBtn">Login</button>
@@ -137,6 +137,11 @@
       if (totalQty > 0) {
         navCartBadge.style.display = 'flex'
         navCartBadge.textContent = totalQty
+        
+        // Trigger pulse animation
+        navCartBadge.classList.remove('cart-badge-pulse')
+        void navCartBadge.offsetWidth // Force reflow
+        navCartBadge.classList.add('cart-badge-pulse')
       } else {
         navCartBadge.style.display = 'none'
       }
@@ -172,7 +177,7 @@
         authBtn.style.display = 'none'
         logoutNavItem.style.display = 'flex'
       } else {
-        welcomeText.textContent = `Welcome to Quick Market! 🥦`
+        welcomeText.textContent = `Welcome to Apna Market! 🥦`
         authBtn.style.display = 'block'
         logoutNavItem.style.display = 'none'
       }
